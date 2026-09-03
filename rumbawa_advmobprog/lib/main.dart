@@ -1,30 +1,34 @@
-// packages
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 
-// screens
-import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/login_screen.dart';
 
-// providers
 import 'providers/theme_provider.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
-    _,
-  ) async {
-    await dotenv.load(fileName: 'assets/.env');
-    runApp(const RoblesAdvMobProg());
-  });
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
+  await dotenv.load(
+    fileName: 'assets/.env',
+  );
+
+  runApp(
+    const RoblesAdvMobProg(),
+  );
 }
 
 class RoblesAdvMobProg extends StatelessWidget {
-  const RoblesAdvMobProg({super.key});
+  const RoblesAdvMobProg({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,16 +39,31 @@ class RoblesAdvMobProg extends StatelessWidget {
         minTextAdapt: true,
         splitScreenMode: true,
         builder: (context, child) {
-          final themeModel = Provider.of<ThemeProvider>(context);
+          final themeModel =
+              Provider.of<ThemeProvider>(context);
+
           return MaterialApp(
             debugShowCheckedModeBanner: false,
+            title: 'Commerce App',
+
             theme: themeModel.lightTheme,
             darkTheme: themeModel.darkTheme,
-            themeMode: themeModel.isDark ? ThemeMode.dark : ThemeMode.light,
-            title: 'Commerce App',
-            initialRoute: '/home',
+
+            themeMode: themeModel.isDark
+                ? ThemeMode.dark
+                : ThemeMode.light,
+
+            // ====================================================
+            // LOGIN
+            // The application now starts with the Login screen.
+            // After successful login, LoginScreen opens HomeScreen
+            // and passes the logged-in user's ID.
+            // ====================================================
+            initialRoute: '/login',
+
             routes: {
-              '/home': (context) => HomeScreen(),
+              '/login': (context) => const LoginScreen(),
+
               '/settings': (context) => SettingsScreen(),
             },
           );

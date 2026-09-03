@@ -7,4 +7,4 @@ A Flutter Project that focuses on advance topics. Covering the web to mobile tra
 ## Lab Activity Instance
 
 ## Laboratory list
-The model, services, and screen work together to get and show the data from the API. The model keeps the format of the data, the service connects to the API and gets the needed information, and the screen displays the data to the user. The new design pattern separates each part of the app, which makes the code cleaner, easier to understand, and easier to fix or change.
+The **Cart Model** stores the cart information, while the **Cart Service** gets the data from the API. The **Cart Screen** displays the cart products and opens the same ProductDetailsScreen when a product is clicked. The updated design separates the model, service, and screen, making the code easier to understand and manage. The getById method uses the user's ID to find the correct cart. This makes sure that only the logged-in user's cart is displayed.

@@ -2,45 +2,114 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../models/product.dart';
+import '../services/cart_service.dart';
 import '../widgets/custom_text.dart';
 
-/// ENHANCEMENT 2: Product Details Screen
-/// This screen displays comprehensive information about a selected product.
-/// 
-/// Features:
-/// - Full product image display
-/// - Product title, rating, and stock information
-/// - Price and discount details
-/// - Complete product description
-/// - Category and brand information
-/// - Product tags/features
-/// - Warranty and shipping information
-/// - Return policy details
-/// - "Add to Cart" button with confirmation
-/// 
-/// This screen is opened when a user taps on a product card from the product list.
-class ProductDetailsScreen extends StatelessWidget {
-  /// The product object passed from the ProductScreen
+/// ============================================================
+/// ENHANCEMENT 2:
+/// Product Details Screen
+///
+/// Displays complete information about a selected product.
+/// ============================================================
+class ProductDetailsScreen extends StatefulWidget {
   final Product product;
 
-  const ProductDetailsScreen({super.key, required this.product});
+  /// ============================================================
+  /// ENHANCEMENT 3:
+  /// User ID used when adding a product to the cart.
+  /// Currently using DummyJSON user ID 1.
+  /// ============================================================
+  final int userId;
+
+  const ProductDetailsScreen({
+    super.key,
+    required this.product,
+    required this.userId,
+  });
+
+  @override
+  State<ProductDetailsScreen> createState() =>
+      _ProductDetailsScreenState();
+}
+
+class _ProductDetailsScreenState
+    extends State<ProductDetailsScreen> {
+  final CartService _cartService = CartService();
+
+  bool isAdding = false;
+
+  /// ============================================================
+  /// ENHANCEMENT 3:
+  /// Add the selected product to the user's cart.
+  ///
+  /// The following values are passed:
+  /// - userId
+  /// - productId
+  /// - quantity
+  /// ============================================================
+  Future<void> _addToCart() async {
+    if (isAdding) return;
+
+    setState(() {
+      isAdding = true;
+    });
+
+    try {
+      await _cartService.addToCart(
+        userId: widget.userId,
+        productId: widget.product.id,
+        quantity: 1,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${widget.product.title} added to cart!',
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Failed to add product to cart.',
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        isAdding = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final product = widget.product;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Product Details'),
         automaticallyImplyLeading: true,
       ),
+
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// ENHANCEMENT 2: Product Image Section
-            /// Displays the product thumbnail image
-            /// - Width: Full screen width
-            /// - Height: 300 units
-            /// - Shows error icon if image fails to load
+
+            // ==================================================
+            // ENHANCEMENT 2:
+            // Product Image
+            // ==================================================
             Container(
               width: double.infinity,
               height: 300.h,
@@ -48,9 +117,16 @@ class ProductDetailsScreen extends StatelessWidget {
               child: Image.network(
                 product.thumbnail,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
+                errorBuilder: (
+                  context,
+                  error,
+                  stackTrace,
+                ) {
                   return Center(
-                    child: Icon(Icons.image, size: 80.sp),
+                    child: Icon(
+                      Icons.image,
+                      size: 80.sp,
+                    ),
                   );
                 },
               ),
@@ -61,8 +137,11 @@ class ProductDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// ENHANCEMENT 2: Product Title
-                  /// Displays the product name in large, bold text
+
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Product Title
+                  // ==================================================
                   CustomText(
                     text: product.title,
                     fontSize: 24.sp,
@@ -71,18 +150,28 @@ class ProductDetailsScreen extends StatelessWidget {
 
                   SizedBox(height: 8.h),
 
-                  /// ENHANCEMENT 2: Rating and Stock Information
-                  /// Displays a star icon with the product rating and current stock
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Rating and Stock
+                  // ==================================================
                   Row(
                     children: [
-                      Icon(Icons.star, color: Colors.amber, size: 20.sp),
+                      Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 20.sp,
+                      ),
+
                       SizedBox(width: 4.w),
+
                       CustomText(
                         text: product.rating.toString(),
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w600,
                       ),
+
                       SizedBox(width: 16.w),
+
                       CustomText(
                         text: 'Stock: ${product.stock}',
                         fontSize: 14.sp,
@@ -93,18 +182,23 @@ class ProductDetailsScreen extends StatelessWidget {
 
                   SizedBox(height: 16.h),
 
-                  /// ENHANCEMENT 2: Product Price Display
-                  /// Shows the price in large, bold green text
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Product Price
+                  // ==================================================
                   CustomText(
-                    text: '\$${product.price.toStringAsFixed(2)}',
+                    text:
+                        '\$${product.price.toStringAsFixed(2)}',
                     fontSize: 28.sp,
                     fontWeight: FontWeight.bold,
                   ),
 
                   SizedBox(height: 8.h),
 
-                  /// ENHANCEMENT 2: Discount Display (if applicable)
-                  /// Shows discount percentage only if product has a discount
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Discount
+                  // ==================================================
                   if (product.discountPercentage > 0)
                     CustomText(
                       text:
@@ -114,8 +208,10 @@ class ProductDetailsScreen extends StatelessWidget {
 
                   SizedBox(height: 16.h),
 
-                  /// ENHANCEMENT 2: Product Description Section
-                  /// Shows detailed product description with full text wrapping
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Description
+                  // ==================================================
                   CustomText(
                     text: 'Description',
                     fontSize: 18.sp,
@@ -132,18 +228,23 @@ class ProductDetailsScreen extends StatelessWidget {
 
                   SizedBox(height: 16.h),
 
-                  /// ENHANCEMENT 2: Category and Brand Information
-                  /// Displays the product category and brand in side-by-side columns
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Category and Brand
+                  // ==================================================
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
                           CustomText(
                             text: 'Category',
                             fontSize: 12.sp,
                           ),
+
                           CustomText(
                             text: product.category,
                             fontSize: 14.sp,
@@ -151,13 +252,16 @@ class ProductDetailsScreen extends StatelessWidget {
                           ),
                         ],
                       ),
+
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
                         children: [
                           CustomText(
                             text: 'Brand',
                             fontSize: 12.sp,
                           ),
+
                           CustomText(
                             text: product.brand,
                             fontSize: 14.sp,
@@ -170,9 +274,10 @@ class ProductDetailsScreen extends StatelessWidget {
 
                   SizedBox(height: 16.h),
 
-                  /// ENHANCEMENT 2: Product Tags/Features
-                  /// Displays product tags as interactive chips
-                  /// Each tag represents a product feature or characteristic
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Product Tags
+                  // ==================================================
                   Wrap(
                     spacing: 8.w,
                     children: product.tags
@@ -189,15 +294,19 @@ class ProductDetailsScreen extends StatelessWidget {
 
                   SizedBox(height: 16.h),
 
-                  /// ENHANCEMENT 2: Warranty, Shipping, and Return Policy Information
-                  /// Displays important product policies and warranty details
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Warranty
+                  // ==================================================
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       CustomText(
                         text: 'Warranty',
                         fontSize: 12.sp,
                       ),
+
                       CustomText(
                         text: product.warrantyInformation,
                         fontSize: 14.sp,
@@ -208,15 +317,19 @@ class ProductDetailsScreen extends StatelessWidget {
 
                   SizedBox(height: 12.h),
 
-                  /// ENHANCEMENT 2: Shipping Information
-                  /// Shows shipping details and delivery information
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Shipping
+                  // ==================================================
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       CustomText(
                         text: 'Shipping',
                         fontSize: 12.sp,
                       ),
+
                       CustomText(
                         text: product.shippingInformation,
                         fontSize: 14.sp,
@@ -227,15 +340,19 @@ class ProductDetailsScreen extends StatelessWidget {
 
                   SizedBox(height: 12.h),
 
-                  /// ENHANCEMENT 2: Return Policy Information
-                  /// Displays the product return policy to inform customers
+                  // ==================================================
+                  // ENHANCEMENT 2:
+                  // Return Policy
+                  // ==================================================
                   Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment:
+                        CrossAxisAlignment.start,
                     children: [
                       CustomText(
                         text: 'Return Policy',
                         fontSize: 12.sp,
                       ),
+
                       CustomText(
                         text: product.returnPolicy,
                         fontSize: 14.sp,
@@ -246,30 +363,41 @@ class ProductDetailsScreen extends StatelessWidget {
 
                   SizedBox(height: 24.h),
 
-                  /// ENHANCEMENT 2: Add to Cart Button
-                  /// Allows users to add the product to their shopping cart.
-                  /// Shows a confirmation message (SnackBar) when clicked.
-                  /// In a real app, this would update a cart state/provider.
+                  // ==================================================
+                  // ENHANCEMENT 3:
+                  // ADD TO CART BUTTON
+                  //
+                  // Sends the following to CartService:
+                  // userId = 1
+                  // productId = selected product ID
+                  // quantity = 1
+                  // ==================================================
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () {
-                        /// Displays a confirmation message when product is added
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${product.title} added to cart!'),
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                      },
+                      onPressed:
+                          isAdding ? null : _addToCart,
+
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(vertical: 12.h),
+                        padding: EdgeInsets.symmetric(
+                          vertical: 12.h,
+                        ),
                       ),
-                      child: CustomText(
-                        text: 'Add to Cart',
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
+
+                      child: isAdding
+                          ? SizedBox(
+                              height: 20.h,
+                              width: 20.w,
+                              child:
+                                  const CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : CustomText(
+                              text: 'Add to Cart',
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                            ),
                     ),
                   ),
                 ],
