@@ -28,6 +28,9 @@ dependencies:
   firebase_storage: ^13.6.0
   firebase_analytics: ^12.6.0
 
+  # Chat bubbles
+  chat_bubbles: ^1.10.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

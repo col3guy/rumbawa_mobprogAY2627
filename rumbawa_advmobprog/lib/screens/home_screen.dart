@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'product_screen.dart';
 import 'cart_screen.dart';
+import 'chat_screen.dart';
 
 import '../widgets/custom_text.dart';
 import '../services/user_service.dart';
@@ -284,6 +285,32 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
       ),
+
+      // ==========================================================
+      // CHAT BUTTON
+      // ==========================================================
+
+      floatingActionButton: _selectedIndex != 1
+          ? FloatingActionButton(
+              backgroundColor: orange,
+              foregroundColor: Colors.white,
+              elevation: 5,
+
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const ChatScreen(),
+                  ),
+                );
+              },
+
+              child: const Icon(
+                Icons.chat_bubble_rounded,
+              ),
+            )
+          : null,
 
       // ==========================================================
       // BOTTOM NAVIGATION
