@@ -376,6 +376,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: null,
+        tooltip: 'Messaging is not enabled in this Lab 5 version',
+        backgroundColor: orange,
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.chat_bubble_outline_rounded),
+      ),
+      floatingActionButtonLocation:
+          FloatingActionButtonLocation.endFloat,
     );
   }
 
