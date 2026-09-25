@@ -158,7 +158,7 @@ class ThemeProvider with ChangeNotifier {
         trackColor: WidgetStateProperty.resolveWith<Color>(
           (states) {
             if (states.contains(WidgetState.selected)) {
-              return orange.withOpacity(0.35);
+              return orange.withValues(alpha: 0.35);
             }
 
             return Colors.grey.shade700;

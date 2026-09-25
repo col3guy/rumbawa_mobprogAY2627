@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../models/product.dart';
 import '../services/cart_service.dart';
-import '../widgets/custom_text.dart';
 
 /// ============================================================
 /// ENHANCEMENT 2:

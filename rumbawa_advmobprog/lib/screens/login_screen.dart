@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../services/auth_service.dart';
 import '../services/user_service.dart';
 import 'home_screen.dart';
 
@@ -12,13 +11,12 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController usernameController =
+  final TextEditingController emailController =
       TextEditingController();
 
   final TextEditingController passwordController =
       TextEditingController();
 
-  final AuthService _authService = AuthService();
   final UserService _userService = UserService();
 
   bool isLoading = false;
@@ -29,7 +27,6 @@ class _LoginScreenState extends State<LoginScreen> {
   // ============================================================
 
   static const Color navy = Color(0xFF1A1953);
-  static const Color darkNavy = Color(0xFF11103B);
   static const Color orange = Color(0xFFFF8A3D);
   static const Color lightOrange = Color(0xFFFFE3D2);
   static const Color white = Color(0xFFFFFFFF);
@@ -44,14 +41,14 @@ class _LoginScreenState extends State<LoginScreen> {
   // ============================================================
 
   Future<void> _login() async {
-    final username = usernameController.text.trim();
+    final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
-            'Please enter your username and password.',
+            'Please enter your email and password.',
           ),
           backgroundColor: orange,
           behavior: SnackBarBehavior.floating,
@@ -69,24 +66,41 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Existing authentication logic.
-      final user = await _authService.login(
-        username: username,
+      final credential = await _userService.signInWithEmailAndPassword(
+        email: email,
         password: password,
       );
 
-      // Save the authenticated user for persistent authentication.
-      await _userService.saveUserData(user);
+      if (credential.user == null) {
+        throw Exception('Unable to sign in. Please try again.');
+      }
+
+      final firebaseUid = credential.user!.uid;
+      final userName = credential.user!.displayName?.trim();
+
+      await _userService.saveUserData({
+        'id': 0,
+        'firebaseUid': firebaseUid,
+        'uid': firebaseUid,
+        'username': userName?.isNotEmpty == true ? userName : email.split('@').first,
+        'email': credential.user!.email ?? email,
+        'firstName': '',
+        'lastName': '',
+        'gender': '',
+        'image': credential.user!.photoURL ?? '',
+        'accessToken': firebaseUid,
+        'refreshToken': '',
+        'token': firebaseUid,
+        'loginType': 'firebase',
+      });
 
       if (!mounted) return;
-
-      final int userId = user['id'];
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => HomeScreen(
-            userId: userId,
+          builder: (context) => const HomeScreen(
+            userId: 0,
           ),
         ),
       );
@@ -96,7 +110,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            e.toString().replaceFirst('Exception: ', ''),
+            e.toString().replaceFirst('Exception: ', '').replaceFirst('FirebaseAuthException: ', ''),
           ),
           backgroundColor: orange,
           behavior: SnackBarBehavior.floating,
@@ -125,6 +139,7 @@ class _LoginScreenState extends State<LoginScreen> {
     required IconData icon,
     bool obscureText = false,
     Widget? suffixIcon,
+    TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,6 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
         TextField(
           controller: controller,
           obscureText: obscureText,
+          keyboardType: keyboardType,
           style: const TextStyle(
             fontSize: 15,
             color: navy,
@@ -180,7 +196,7 @@ class _LoginScreenState extends State<LoginScreen> {
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(14),
               borderSide: BorderSide(
-                color: navy.withOpacity(0.12),
+                color: navy.withValues(alpha: 0.12),
               ),
             ),
 
@@ -209,7 +225,7 @@ class _LoginScreenState extends State<LoginScreen> {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: orange.withOpacity(opacity),
+        color: orange.withValues(alpha: opacity),
         shape: BoxShape.circle,
       ),
     );
@@ -320,7 +336,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               boxShadow: [
                                 BoxShadow(
                                   color:
-                                      Colors.black.withOpacity(0.20),
+                                      Colors.black.withValues(alpha: 0.20),
                                   blurRadius: 20,
                                   offset:
                                       const Offset(0, 9),
@@ -369,7 +385,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             'CAMPUS MARKETPLACE',
                             style: TextStyle(
                               color:
-                                  white.withOpacity(0.80),
+                                  white.withValues(alpha: 0.80),
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 2,
@@ -407,13 +423,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         BorderRadius.circular(28),
 
                     border: Border.all(
-                      color: navy.withOpacity(0.08),
+                      color: navy.withValues(alpha: 0.08),
                     ),
 
                     boxShadow: [
                       BoxShadow(
                         color:
-                            navy.withOpacity(0.10),
+                            navy.withValues(alpha: 0.10),
                         blurRadius: 25,
                         offset: const Offset(0, 10),
                       ),
@@ -483,11 +499,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       _buildTextField(
                         controller:
-                            usernameController,
-                        label: 'Username',
-                        hint: 'Enter your username',
+                            emailController,
+                        label: 'Email',
+                        hint: 'Enter your email',
                         icon:
-                            Icons.person_outline_rounded,
+                            Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
                       ),
 
                       const SizedBox(height: 21),
@@ -555,7 +572,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             elevation: 5,
 
                             shadowColor:
-                                orange.withOpacity(0.35),
+                                orange.withValues(alpha: 0.35),
 
                             shape:
                                 RoundedRectangleBorder(
@@ -608,7 +625,27 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 16),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/signup');
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: navy,
+                          ),
+                          child: const Text(
+                            'Create account',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
 
                       // ==================================================
                       // SECURITY BOX
@@ -628,7 +665,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                           border: Border.all(
                             color:
-                                orange.withOpacity(0.25),
+                                orange.withValues(alpha: 0.25),
                           ),
                         ),
 

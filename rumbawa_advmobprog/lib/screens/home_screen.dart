@@ -52,7 +52,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    // Load the currently logged-in user.
     _loadCurrentUser();
   }
 
@@ -64,14 +63,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ============================================================
   // LOAD CURRENT LOGGED-IN USER
-  //
-  // Uses the user ID received from LoginScreen.
   // ============================================================
 
   Future<void> _loadCurrentUser() async {
     try {
+      final userService = UserService();
+      final savedUser = await userService.getUserData();
+      final loginType = savedUser['loginType'] ?? 'dummyjson';
+
+      if (loginType == 'firebase') {
+        if (!mounted) return;
+
+        setState(() {
+          currentUser = savedUser;
+          isLoadingUser = false;
+        });
+        return;
+      }
+
       final loadedUser =
-          await UserService().getUserById(widget.userId);
+          await userService.getUserById(widget.userId);
 
       if (!mounted) return;
 
@@ -101,26 +112,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ============================================================
   // SIGN OUT
-  //
-  // IMPORTANT:
-  // Clear the saved authentication data before going to
-  // the login page.
-  //
-  // This allows persistent authentication to work:
-  //
-  // LOGIN + RESTART = STAY LOGGED IN
-  //
-  // LOGOUT + RESTART = LOGIN PAGE
   // ============================================================
 
   Future<void> _signOut() async {
-    // Clear the saved token and user information.
     await UserService().logout();
 
-    // Make sure the screen is still active.
     if (!mounted) return;
 
-    // Remove all previous pages and return to LoginScreen.
     Navigator.pushNamedAndRemoveUntil(
       context,
       '/login',
@@ -132,7 +130,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
     final bool isDark =
         theme.brightness == Brightness.dark;
 
@@ -146,20 +143,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final Color cardColor =
         colorScheme.surface;
 
-    final Color mainTextColor =
-        colorScheme.onSurface;
-
-    final Color secondaryTextColor =
-        colorScheme.onSurface.withOpacity(0.60);
-
     final Color appBarColor =
         isDark ? darkNavy : navy;
 
     return Scaffold(
-      // ==========================================================
-      // WHOLE PAGE BACKGROUND
-      // ==========================================================
-
       backgroundColor: pageBackground,
 
       // ==========================================================
@@ -176,12 +163,10 @@ class _HomeScreenState extends State<HomeScreen> {
         title: _selectedIndex == 0
             ? Row(
                 children: [
-                  // Logo
                   Container(
                     width: 40.w,
                     height: 40.h,
                     padding: EdgeInsets.all(6.w),
-
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius:
@@ -191,7 +176,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 2,
                       ),
                     ),
-
                     child: Image.asset(
                       'assets/images/nubdexchange_logo.png',
                       fit: BoxFit.contain,
@@ -215,14 +199,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           letterSpacing: 0.7,
                         ),
                       ),
-
                       SizedBox(height: 2.h),
-
                       Text(
                         'Campus Marketplace',
                         style: TextStyle(
-                          color:
-                              Colors.white.withOpacity(0.70),
+                          color: Colors.white
+                              .withValues(alpha: 0.70),
                           fontSize: 9.sp,
                           letterSpacing: 0.5,
                         ),
@@ -236,7 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     width: 5.w,
                     height: 27.h,
-
                     decoration: BoxDecoration(
                       color: orange,
                       borderRadius:
@@ -279,33 +260,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
       body: Container(
         color: pageBackground,
-
         child: PageView(
           physics:
               const NeverScrollableScrollPhysics(),
-
           controller: _pageController,
 
           children: [
-            // ====================================================
-            // PRODUCT SCREEN
-            // ====================================================
-
             ProductScreen(
               userId: widget.userId,
             ),
 
-            // ====================================================
-            // CART SCREEN
-            // ====================================================
-
             CartScreen(
               userId: widget.userId,
             ),
-
-            // ====================================================
-            // PROFILE
-            // ====================================================
 
             _buildProfileScreen(),
           ],
@@ -319,47 +286,18 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       // ==========================================================
-      // CHAT BUTTON
-      // ==========================================================
-
-      floatingActionButton: _selectedIndex != 1
-          ? FloatingActionButton(
-              backgroundColor: orange,
-              foregroundColor: Colors.white,
-              elevation: 5,
-
-              onPressed: () {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-                  SnackBar(
-                    content: const Text(
-                      'Chat feature opened',
-                    ),
-                    backgroundColor: appBarColor,
-                  ),
-                );
-              },
-
-              child: const Icon(
-                Icons.chat_bubble_rounded,
-              ),
-            )
-          : null,
-
-      // ==========================================================
       // BOTTOM NAVIGATION
       // ==========================================================
 
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: cardColor,
-
           boxShadow: isDark
               ? null
               : [
                   BoxShadow(
                     color:
-                        navy.withOpacity(0.10),
+                        navy.withValues(alpha: 0.10),
                     blurRadius: 15,
                     offset:
                         const Offset(0, -4),
@@ -369,19 +307,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
         child: BottomNavigationBar(
           backgroundColor: cardColor,
-
           elevation: 0,
-
           type:
               BottomNavigationBarType.fixed,
-
           currentIndex: _selectedIndex,
-
           selectedItemColor: orange,
-
           unselectedItemColor:
               colorScheme.onSurface
-                  .withOpacity(0.45),
+                  .withValues(alpha: 0.45),
 
           selectedIconTheme:
               IconThemeData(
@@ -448,17 +381,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ============================================================
   // PROFILE SCREEN
-  //
-  // Shows information belonging to the currently
-  // logged-in user.
   // ============================================================
 
   Widget _buildProfileScreen() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    final bool isDark =
-        theme.brightness == Brightness.dark;
 
     final Color pageBackground =
         theme.scaffoldBackgroundColor;
@@ -470,12 +397,12 @@ class _HomeScreenState extends State<HomeScreen> {
         colorScheme.onSurface;
 
     final Color secondaryTextColor =
-        colorScheme.onSurface.withOpacity(0.60);
+        colorScheme.onSurface
+            .withValues(alpha: 0.60);
 
     if (isLoadingUser) {
       return Container(
         color: pageBackground,
-
         child: Center(
           child: CircularProgressIndicator(
             color: orange,
@@ -487,7 +414,6 @@ class _HomeScreenState extends State<HomeScreen> {
     if (currentUser == null) {
       return Container(
         color: pageBackground,
-
         child: Center(
           child: Text(
             'Unable to load profile.',
@@ -553,14 +479,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 decoration: BoxDecoration(
                   color: navy,
-
                   borderRadius:
                       BorderRadius.circular(25.r),
 
                   boxShadow: [
                     BoxShadow(
                       color:
-                          navy.withOpacity(0.20),
+                          navy.withValues(alpha: 0.20),
                       blurRadius: 15,
                       offset:
                           const Offset(0, 7),
@@ -570,7 +495,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 child: Stack(
                   children: [
-                    // Decorative orange circle
                     Positioned(
                       top: -45,
                       right: -45,
@@ -582,16 +506,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         decoration:
                             BoxDecoration(
                           color: orange
-                              .withOpacity(0.18),
+                              .withValues(alpha: 0.18),
                           shape:
                               BoxShape.circle,
                         ),
                       ),
                     ),
-
-                    // ==================================================
-                    // CENTERED PROFILE CONTENT
-                    // ==================================================
 
                     Center(
                       child: Column(
@@ -602,10 +522,6 @@ class _HomeScreenState extends State<HomeScreen> {
                             CrossAxisAlignment.center,
 
                         children: [
-                          // ==================================================
-                          // PROFILE PICTURE
-                          // ==================================================
-
                           Container(
                             padding:
                                 EdgeInsets.all(4.w),
@@ -643,10 +559,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           SizedBox(height: 15.h),
 
-                          // ==================================================
-                          // NAME
-                          // ==================================================
-
                           Text(
                             fullName.isEmpty
                                 ? 'User'
@@ -666,10 +578,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
                           SizedBox(height: 5.h),
 
-                          // ==================================================
-                          // USERNAME
-                          // ==================================================
-
                           Text(
                             username.isEmpty
                                 ? '@user'
@@ -680,8 +588,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             style: TextStyle(
                               color: Colors.white
-                                  .withOpacity(
-                                0.70,
+                                  .withValues(
+                                alpha: 0.70,
                               ),
                               fontSize: 13.sp,
                               fontWeight:
@@ -713,10 +621,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               SizedBox(height: 25.h),
-
-              // ==================================================
-              // INFORMATION TITLE
-              // ==================================================
 
               Align(
                 alignment:
@@ -757,10 +661,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
               SizedBox(height: 15.h),
 
-              // ==================================================
-              // USER INFORMATION
-              // ==================================================
-
               _profileInfo(
                 Icons.email_outlined,
                 'Email',
@@ -779,11 +679,88 @@ class _HomeScreenState extends State<HomeScreen> {
                 gender,
               ),
 
-              SizedBox(height: 12.h),
+              SizedBox(height: 18.h),
 
-              // ==================================================
-              // SIGN OUT BUTTON
-              // ==================================================
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12.w),
+
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius:
+                      BorderRadius.circular(18.r),
+                  border: Border.all(
+                    color:
+                        navy.withValues(alpha: 0.08),
+                  ),
+                ),
+
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
+
+                  children: [
+                    Text(
+                      'Account actions',
+
+                      style: TextStyle(
+                        color: mainTextColor,
+                        fontSize: 16.sp,
+                        fontWeight:
+                            FontWeight.w800,
+                      ),
+                    ),
+
+                    SizedBox(height: 12.h),
+
+                    if ((currentUser!['loginType'] ??
+                            'dummyjson') ==
+                        'firebase') ...[
+                      _accountActionButton(
+                        icon: Icons.edit,
+                        label: 'Update username',
+                        onTap:
+                            _showUpdateUsernameDialog,
+                      ),
+
+                      SizedBox(height: 10.h),
+
+                      _accountActionButton(
+                        icon:
+                            Icons.lock_reset_rounded,
+                        label: 'Change password',
+                        onTap:
+                            _showChangePasswordDialog,
+                      ),
+
+                      SizedBox(height: 10.h),
+
+                      _accountActionButton(
+                        icon:
+                            Icons.delete_forever_rounded,
+                        label: 'Delete account',
+                        onTap:
+                            _showDeleteAccountDialog,
+                        destructive: true,
+                      ),
+                    ] else ...[
+                      Text(
+                        'This account is managed by DummyJSON.\n'
+                        'Use the app login flow to manage it there.',
+
+                        style: TextStyle(
+                          color:
+                              secondaryTextColor,
+                          fontSize: 12.sp,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 12.h),
 
               SizedBox(
                 width: double.infinity,
@@ -847,6 +824,450 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _showUpdateUsernameDialog() async {
+    final controller = TextEditingController(
+      text: currentUser?['username'] ?? '',
+    );
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update username'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Username',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(
+              context,
+              controller.text.trim(),
+            ),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null || result.isEmpty) return;
+
+    try {
+      final userService = UserService();
+
+      await userService.updateUsername(result);
+
+      final updated =
+          Map<String, dynamic>.from(
+        currentUser ?? {},
+      );
+
+      updated['username'] = result;
+
+      await userService.saveUserData(updated);
+
+      if (!mounted) return;
+
+      setState(() {
+        currentUser = updated;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Username updated successfully.'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _showChangePasswordDialog() async {
+    final currentPasswordController =
+        TextEditingController();
+
+    final newPasswordController =
+        TextEditingController();
+
+    final confirmPasswordController =
+        TextEditingController();
+
+    final messenger =
+        ScaffoldMessenger.maybeOf(context);
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change password'),
+
+        content: SizedBox(
+          width: 350,
+
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+
+            children: [
+              TextField(
+                controller:
+                    currentPasswordController,
+                obscureText: true,
+                decoration:
+                    const InputDecoration(
+                  labelText:
+                      'Current password',
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              TextField(
+                controller:
+                    newPasswordController,
+                obscureText: true,
+                decoration:
+                    const InputDecoration(
+                  labelText:
+                      'New password',
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              TextField(
+                controller:
+                    confirmPasswordController,
+                obscureText: true,
+                decoration:
+                    const InputDecoration(
+                  labelText:
+                      'Confirm new password',
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(
+              context,
+              false,
+            ),
+            child:
+                const Text('Cancel'),
+          ),
+
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(
+              context,
+              true,
+            ),
+            child:
+                const Text('Update'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != true) return;
+
+    final currentPassword =
+        currentPasswordController.text.trim();
+
+    final newPassword =
+        newPasswordController.text.trim();
+
+    final confirmPassword =
+        confirmPasswordController.text.trim();
+
+    if (currentPassword.isEmpty ||
+        newPassword.isEmpty ||
+        confirmPassword.isEmpty) {
+      messenger?.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please fill in all password fields.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    if (newPassword != confirmPassword) {
+      messenger?.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'New passwords do not match.',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    try {
+      await UserService().changePassword(
+        currentPassword,
+        newPassword,
+      );
+
+      if (!mounted) return;
+
+      messenger?.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Password changed successfully.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _showDeleteAccountDialog() async {
+    final emailController =
+        TextEditingController(
+      text: currentUser?['email'] ?? '',
+    );
+
+    final passwordController =
+        TextEditingController();
+
+    final navigator =
+        Navigator.of(context);
+
+    final messenger =
+        ScaffoldMessenger.maybeOf(context);
+
+    final confirm =
+        await showDialog<bool>(
+      context: context,
+
+      builder: (context) =>
+          AlertDialog(
+        title:
+            const Text('Delete account'),
+
+        content: SizedBox(
+          width: 350,
+
+          child: Column(
+            mainAxisSize:
+                MainAxisSize.min,
+
+            children: [
+              const Text(
+                'This will permanently delete your Firebase account.',
+              ),
+
+              const SizedBox(
+                height: 12,
+              ),
+
+              TextField(
+                controller:
+                    emailController,
+
+                decoration:
+                    const InputDecoration(
+                  labelText:
+                      'Email',
+                ),
+              ),
+
+              const SizedBox(
+                height: 12,
+              ),
+
+              TextField(
+                controller:
+                    passwordController,
+
+                obscureText:
+                    true,
+
+                decoration:
+                    const InputDecoration(
+                  labelText:
+                      'Password',
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(
+              context,
+              false,
+            ),
+
+            child:
+                const Text('Cancel'),
+          ),
+
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(
+              context,
+              true,
+            ),
+
+            child:
+                const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await UserService().deleteAccount(
+        emailController.text.trim(),
+        passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      await UserService().logout();
+
+      if (!mounted) return;
+
+      if (navigator.mounted) {
+        navigator.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().replaceFirst(
+                  'Exception: ',
+                  '',
+                ),
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _accountActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    bool destructive = false,
+  }) {
+    final theme = Theme.of(context);
+    final mainTextColor =
+        theme.colorScheme.onSurface;
+
+    return InkWell(
+      onTap: onTap,
+
+      borderRadius:
+          BorderRadius.circular(12.r),
+
+      child: Container(
+        width: double.infinity,
+
+        padding: EdgeInsets.symmetric(
+          horizontal: 12.w,
+          vertical: 12.h,
+        ),
+
+        decoration: BoxDecoration(
+          color: destructive
+              ? Colors.red
+                  .withValues(alpha: 0.08)
+              : lightOrange,
+
+          borderRadius:
+              BorderRadius.circular(12.r),
+        ),
+
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color:
+                  destructive
+                      ? Colors.red
+                      : orange,
+            ),
+
+            SizedBox(width: 12.w),
+
+            Expanded(
+              child: Text(
+                label,
+
+                style: TextStyle(
+                  color: destructive
+                      ? Colors.red
+                      : mainTextColor,
+
+                  fontWeight:
+                      FontWeight.w700,
+
+                  fontSize: 13.sp,
+                ),
+              ),
+            ),
+
+            Icon(
+              Icons.chevron_right_rounded,
+
+              color: destructive
+                  ? Colors.red
+                  : orange,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ============================================================
   // PROFILE INFORMATION ITEM
   // ============================================================
@@ -857,10 +1278,12 @@ class _HomeScreenState extends State<HomeScreen> {
     String value,
   ) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme =
+        theme.colorScheme;
 
     final bool isDark =
-        theme.brightness == Brightness.dark;
+        theme.brightness ==
+            Brightness.dark;
 
     return Container(
       width: double.infinity,
@@ -872,15 +1295,17 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: EdgeInsets.all(15.w),
 
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color:
+            colorScheme.surface,
 
         borderRadius:
             BorderRadius.circular(16.r),
 
         border: Border.all(
           color: isDark
-              ? Colors.white.withOpacity(0.08)
-              : navy.withOpacity(0.08),
+              ? Colors.white
+                  .withValues(alpha: 0.08)
+              : navy.withValues(alpha: 0.08),
         ),
 
         boxShadow: isDark
@@ -888,7 +1313,7 @@ class _HomeScreenState extends State<HomeScreen> {
             : [
                 BoxShadow(
                   color:
-                      navy.withOpacity(0.04),
+                      navy.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset:
                       const Offset(0, 3),
@@ -898,14 +1323,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
       child: Row(
         children: [
-          // Orange icon container
           Container(
             width: 43.w,
             height: 43.h,
 
-            decoration: BoxDecoration(
+            decoration:
+                BoxDecoration(
               color: isDark
-                  ? orange.withOpacity(0.18)
+                  ? orange.withValues(
+                      alpha: 0.18,
+                    )
                   : lightOrange,
 
               borderRadius:
@@ -939,7 +1366,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     color: colorScheme
                         .onSurface
-                        .withOpacity(0.60),
+                        .withValues(
+                      alpha: 0.60,
+                    ),
                   ),
                 ),
 

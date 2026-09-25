@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/theme_provider.dart';
+import '../services/user_service.dart';
 
 /// ENHANCEMENT 3: Settings Screen with Dark/Light Mode Toggle
 /// This screen provides user settings, primarily for theme management.
@@ -28,6 +29,62 @@ class SettingsScreen extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: theme.brightness == Brightness.light
+                      ? [
+                          BoxShadow(
+                            color: colorScheme.primary.withValues(alpha: 0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
+                  ),
+                  leading: Container(
+                    width: 45,
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: colorScheme.error.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                    child: const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.red,
+                    ),
+                  ),
+                  title: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: const Text(
+                    'Clear session and return to login',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  onTap: () async {
+                    await UserService().logout();
+                    if (context.mounted) {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/login',
+                        (route) => false,
+                      );
+                    }
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+
               /// ENHANCEMENT 3: Dark/Light mode switch
               /// When enabled, ThemeProvider changes the application's
               /// ThemeMode. Because MaterialApp uses ThemeProvider,
@@ -39,7 +96,7 @@ class SettingsScreen extends StatelessWidget {
                   boxShadow: theme.brightness == Brightness.light
                       ? [
                           BoxShadow(
-                            color: colorScheme.primary.withOpacity(0.08),
+                            color: colorScheme.primary.withValues(alpha: 0.08),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -56,7 +113,7 @@ class SettingsScreen extends StatelessWidget {
                     width: 45,
                     height: 45,
                     decoration: BoxDecoration(
-                      color: colorScheme.secondary.withOpacity(0.15),
+                      color: colorScheme.secondary.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(13),
                     ),
                     child: Icon(
@@ -81,7 +138,7 @@ class SettingsScreen extends StatelessWidget {
                         ? 'Dark mode is enabled'
                         : 'Use light mode',
                     style: TextStyle(
-                      color: colorScheme.onSurface.withOpacity(0.60),
+                      color: colorScheme.onSurface.withValues(alpha: 0.60),
                       fontSize: 12,
                     ),
                   ),

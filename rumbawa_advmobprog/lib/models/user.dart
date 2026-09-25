@@ -8,6 +8,7 @@ class User {
   final String image;
   final String accessToken;
   final String refreshToken;
+  final String firebaseUid;
 
   const User({
     required this.id,
@@ -19,6 +20,7 @@ class User {
     required this.image,
     required this.accessToken,
     required this.refreshToken,
+    this.firebaseUid = '',
   });
 
   // ============================================================
@@ -27,8 +29,13 @@ class User {
   // authenticated user's information.
   // ============================================================
   factory User.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    final parsedId = rawId is int
+        ? rawId
+        : (rawId is String ? int.tryParse(rawId) ?? 0 : 0);
+
     return User(
-      id: json['id'] ?? 0,
+      id: parsedId,
       username: json['username'] ?? '',
       email: json['email'] ?? '',
       firstName: json['firstName'] ?? '',
@@ -37,6 +44,7 @@ class User {
       image: json['image'] ?? '',
       accessToken: json['accessToken'] ?? json['token'] ?? '',
       refreshToken: json['refreshToken'] ?? '',
+      firebaseUid: (json['firebaseUid'] ?? json['uid'] ?? '').toString(),
     );
   }
 
@@ -51,6 +59,7 @@ class User {
       'image': image,
       'accessToken': accessToken,
       'refreshToken': refreshToken,
+      'firebaseUid': firebaseUid,
     };
   }
 }

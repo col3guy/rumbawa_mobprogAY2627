@@ -85,7 +85,7 @@ class _ProductScreenState extends State<ProductScreen> {
         colorScheme.onSurface;
 
     final Color secondaryTextColor =
-        colorScheme.onSurface.withOpacity(0.60);
+        colorScheme.onSurface.withValues(alpha: 0.60);
 
     final Color imageBackground = isDark
         ? const Color(0xFF25245D)
@@ -155,8 +155,8 @@ class _ProductScreenState extends State<ProductScreen> {
                   border: Border.all(
                     color: isDark
                         ? Colors.white
-                            .withOpacity(0.08)
-                        : navy.withOpacity(0.08),
+                            .withValues(alpha: 0.08)
+                        : navy.withValues(alpha: 0.08),
                   ),
 
                   boxShadow: isDark
@@ -164,7 +164,7 @@ class _ProductScreenState extends State<ProductScreen> {
                       : [
                           BoxShadow(
                             color:
-                                navy.withOpacity(0.05),
+                                navy.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset:
                                 const Offset(0, 4),
@@ -216,8 +216,8 @@ class _ProductScreenState extends State<ProductScreen> {
                           BoxDecoration(
                         color: isDark
                             ? orange
-                                .withOpacity(
-                                0.18,
+                                .withValues(
+                                alpha: 0.18,
                               )
                             : lightOrange,
 
@@ -290,8 +290,8 @@ class _ProductScreenState extends State<ProductScreen> {
                     decoration:
                         BoxDecoration(
                       color: isDark
-                          ? orange.withOpacity(
-                              0.18,
+                          ? orange.withValues(
+                              alpha: 0.18,
                             )
                           : lightOrange,
 
@@ -369,8 +369,8 @@ class _ProductScreenState extends State<ProductScreen> {
 
                         border: Border.all(
                           color:
-                              orange.withOpacity(
-                            0.25,
+                              orange.withValues(
+                            alpha: 0.25,
                           ),
                         ),
                       ),
@@ -570,11 +570,11 @@ class _ProductScreenState extends State<ProductScreen> {
                             border: Border.all(
                               color: isDark
                                   ? Colors.white
-                                      .withOpacity(
-                                      0.08,
+                                      .withValues(
+                                      alpha: 0.08,
                                     )
-                                  : navy.withOpacity(
-                                      0.06,
+                                  : navy.withValues(
+                                      alpha: 0.06,
                                     ),
                             ),
 
@@ -583,8 +583,8 @@ class _ProductScreenState extends State<ProductScreen> {
                                 : [
                                     BoxShadow(
                                       color: navy
-                                          .withOpacity(
-                                        0.06,
+                                          .withValues(
+                                        alpha: 0.06,
                                       ),
                                       blurRadius:
                                           10,
@@ -778,8 +778,8 @@ class _ProductScreenState extends State<ProductScreen> {
                                                 BoxDecoration(
                                               color:
                                                   isDark
-                                                      ? orange.withOpacity(
-                                                          0.18,
+                                                      ? orange.withValues(
+                                                          alpha: 0.18,
                                                         )
                                                       : lightOrange,
 
